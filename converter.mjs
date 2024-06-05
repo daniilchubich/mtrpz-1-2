@@ -25,15 +25,8 @@ function splitPreformatted (text) {
 }
 
 function paragraphSplit (text) {
-    let closing = true; 
     while (text.search(data.paragraph) !== -1) {
-        if (closing) {
-            text = text.replace(data.paragraph, data.paragraphStartReplace);
-            closing = false;
-        } else {
-            text = text.replace(data.paragraph, data.paragraphEndReplace);
-            closing = true;
-        }
+        text = text.replace(data.paragraph, data.paragraphEndReplace + data.paragraphStartReplace);
     }
     return text;
 }
