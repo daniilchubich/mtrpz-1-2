@@ -14,7 +14,7 @@ for (let i = 0; i < args.length; i++) {
         if (i === args.length - 1) throw new Error('No file specified for --out');
         writeTo = args[i + 1];
     } else if (i === args.length - 1) {
-        fileName = args[i];
+        readFrom = args[i];
     } else {
         throw new Error('Unknown argument: ' + args[i]);
     }

@@ -1,29 +1,24 @@
-import { boldEnd, boldStart } from './data.mjs';
-
-export * as data from './data.mjs';
+import * as data from './data.mjs';
 
 export default function convert (content) {
     if (content === '') return content;
     const parts = splitPreformatted(content);
-    for (let i = 0; i < parts.length - 1; i += 2) {
-        parts[i] = paragraphSplit(parts[i]);
+    for (let i = 0; i < parts.length; i += 2) {
         parts[i] = replaceTags(parts[i]);
+        parts[i] = paragraphSplit(parts[i]);
     }
 
-    parts = parts.map((part, index) => {
+    const newParts = parts.map((part, index) => {
         if (index % 2 === 0) return part;
         return data.preformattedStartReplace + part + data.preformattedEndReplace;
     });
 
-    const final = parts.join('');
+    const final = newParts.join('');
     return data.paragraphStartReplace + final + data.paragraphEndReplace;
 }
 
 function splitPreformatted (text) {
     const parts = text.split(data.preformatted);
-    if (parts[0] === '') parts.shift();
-    if (parts[parts.length - 1] === '') parts.pop();
-
     if (parts.length % 2 === 0) throw new Error('Unclosed preformatted block');
 
     return parts;
@@ -31,7 +26,7 @@ function splitPreformatted (text) {
 
 function paragraphSplit (text) {
     let closing = true; 
-    while (text.find(data.paragraph) !== -1) {
+    while (text.search(data.paragraph) !== -1) {
         if (closing) {
             text = text.replace(data.paragraph, data.paragraphStartReplace);
             closing = false;
@@ -47,12 +42,13 @@ function replaceTags(text) {
     let expectedTag = '';
 
     const entries = [];
-    entries.push(...boldStart.execAll(text));
-    entries.push(...italicStart.execAll(text));
-    entries.push(...monospacedStart.execAll(text));
-    entries.push(...boldEnd.execAll(text));
-    entries.push(...italicEnd.execAll(text));
-    entries.push(...monospacedEnd.execAll(text));
+    entries.push(...match(text, data.boldStart));
+    entries.push(...match(text, data.italicStart));
+    entries.push(...match(text, data.monospacedStart));
+    entries.push(...match(text, data.boldEnd));
+    entries.push(...match(text, data.italicEnd));
+    entries.push(...match(text, data.monospacedEnd));
+
 
     entries.sort((a, b) => a.index - b.index);
 
@@ -64,14 +60,20 @@ function replaceTags(text) {
             }
             expectedTag = getPairTag(entry[0]);
 
-            text = text.replace(entry[0], getReplaceTag(entry[0]));
+            text = text.replace(entry[0], getReplaceTag(entry.original));
         } else if (expectedTag === entry[0]) {
             expectedTag = '';
-            text = text.replace(entry[0], getReplaceTag(entry[0]));
+            text = text.replace(entry[0], getReplaceTag(entry.original));
         } else {
             throw new Error('Unmatched tag');
         }
     }
+
+    if (expectedTag !== '') {
+        throw new Error('Unclosed tag');
+    }
+
+    return text;
 }
 
 function getPairTag (text) {
@@ -91,6 +93,20 @@ function getReplaceTag (text) {
         case data.boldEnd: return data.boldEndReplace;
         case data.italicEnd: return data.italicEndReplace;
         case data.monospacedEnd: return data.monospacedEndReplace;
-        default: return '';
+        default: throw new Error('Unknown tag: ', text);
     }
+}
+
+function match(text, regex) {
+    const matches = [];
+
+    while (true) {
+        const match = regex.exec(text);
+        if (!match) break;
+        
+        match.original = regex;
+        matches.push(match);
+    }
+
+    return matches;
 }
