@@ -13,6 +13,7 @@ for (let i = 0; i < args.length; i++) {
         writeToFile = true;
         if (i === args.length - 1) throw new Error('No file specified for --out');
         writeTo = args[i + 1];
+        i++;
     } else if (i === args.length - 1) {
         readFrom = args[i];
     } else {
