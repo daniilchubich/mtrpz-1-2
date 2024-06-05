@@ -1,19 +1,27 @@
 import * as data from './data.mjs';
 
-export default function convert (content) {
+const supportedFormats = ['html', 'esc'];
+
+let fmt = '';
+
+export default function convert (content, format) {
+    if (!supportedFormats.includes(format)) throw new Error('Unsupported format: ' + format);
+    fmt = format;
     if (content === '') return content;
     const parts = splitPreformatted(content);
     for (let i = 0; i < parts.length; i += 2) {
         parts[i] = replaceTags(parts[i]);
-        parts[i] = paragraphSplit(parts[i]);
+        if (fmt === 'html') parts[i] = paragraphSplit(parts[i]);
     }
 
     const newParts = parts.map((part, index) => {
         if (index % 2 === 0) return part;
-        return data.preformattedStartReplace + part + data.preformattedEndReplace;
+        return data.preformattedStartReplace[fmt] + part + data.preformattedEndReplace[fmt];
     });
 
     const final = newParts.join('');
+
+    if (fmt === 'esc') return final;
     return data.paragraphStartReplace + final + data.paragraphEndReplace;
 }
 
@@ -80,12 +88,12 @@ function getPairTag (text) {
 
 function getReplaceTag (text) {
     switch (text) {
-        case data.boldStart: return data.boldStartReplace;
-        case data.italicStart: return data.italicStartReplace;
-        case data.monospacedStart: return data.monospacedStartReplace;
-        case data.boldEnd: return data.boldEndReplace;
-        case data.italicEnd: return data.italicEndReplace;
-        case data.monospacedEnd: return data.monospacedEndReplace;
+        case data.boldStart: return data.boldStartReplace[fmt];
+        case data.italicStart: return data.italicStartReplace[fmt];
+        case data.monospacedStart: return data.monospacedStartReplace[fmt];
+        case data.boldEnd: return data.boldEndReplace[fmt];
+        case data.italicEnd: return data.italicEndReplace[fmt];
+        case data.monospacedEnd: return data.monospacedEndReplace[fmt];
         default: throw new Error('Unknown tag: ', text);
     }
 }
