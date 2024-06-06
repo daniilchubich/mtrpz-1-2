@@ -42,7 +42,3 @@ assertThrow(() => convert('**Hello_ World!', 'html'));
 console.log("Unmatched tags passed");
 
 console.log("All tests passed!");
-
-console.log("Test ability to fail test...")
-assertEqual(convert('Hello, World!', 'esc'), '\x1b[1mHello,\x1b[0m \x1b[3mWorld!\x1b[0m'); 
-console.log("Test passed which means my test cannot fail-_-");
